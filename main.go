@@ -2,16 +2,51 @@ package main
 
 import (
 	"fmt"
-	"os"
-	"os/exec"
-	"path/filepath"
-	"strings"
 	"time"
 )
 
+type messageToSend struct {
+	phone  int
+	person string
+}
+
+type inviteModel struct {
+	material string
+	messageToSend
+}
+
 // functions, of cours, need to be declared before the endpoint
-func tellMyHistory(name string, age int) {
+func tellMyHistory(name string, age int) int {
 	fmt.Printf("Hello, my name is %v and I am %v", name, age)
+	return age + 30
+}
+
+func sendMessage(struct_message messageToSend) string {
+	// simple control check
+	ret_val := ""
+	if struct_message.phone == 0 {
+		ret_val = "Hello " + struct_message.person
+		return ret_val
+	}
+	ret_val = "Hello " + struct_message.person + ",\nyour new phone is: " + fmt.Sprint(struct_message.phone)
+	return ret_val
+}
+
+func inviteSendMessage(inviteMessage inviteModel) string {
+
+	childStruct := messageToSend{}
+	childStruct.person = inviteMessage.person
+	childStruct.phone = inviteMessage.phone
+	ret_val := sendMessage(childStruct)
+
+	return "invite card made by: " + inviteMessage.material + "\n" + ret_val
+}
+
+// rewrite inviteSendMessage as a method
+func (c messageToSend) methodSendMessage(material string) string {
+	ret_val := sendMessage(c)
+
+	return "invite card made by: " + material + "\n" + ret_val
 }
 
 func main() {
@@ -57,19 +92,46 @@ func main() {
 	}
 
 	// executing the function
-	tellMyHistory("Vitor", 30)
+	plus_sixty := tellMyHistory("Vitor", 30)
+	fmt.Printf("\n Testing the return of function %v\n", plus_sixty)
 
-	// executing cmd
-	// wait for exec.Command to complete
-	args := strings.Split("/c dir", " ")
-	cmd := exec.Command("cmd.exe", args...)
+	// calling the second function and ignoring with _
+	wrap_function, _ := nameAndAge("Vitor", 29)
+	fmt.Printf("%v value from nameAndName function", wrap_function)
 
-	cmd.Dir = filepath.Join("C://", "Windows")
-	cmd.Stdout = os.Stdout
-	cmd.Stderr = os.Stderr
-
-	err := cmd.Run()
-	if err != nil {
-		fmt.Printf("cmd.Run: %s failed: %s\n", err, err)
+	// working with structs (similar to python dic)
+	message := messageToSend{
+		person: "Milena",
+		phone:  930410032,
 	}
+	message_ready := sendMessage(message)
+	fmt.Printf("Testing:\n%v\n", message_ready)
+
+	// initiating from another way (like it)
+	short_message := messageToSend{}
+	short_message.person = "Paul"
+	short_message.phone = 99822838
+
+	short_message_ready := sendMessage(short_message)
+	fmt.Printf("Testing:\n%v\n", short_message_ready)
+
+	// instanciating new inviteModel
+	inviteLove := inviteModel{}
+	inviteLove.material = "Paper"
+	inviteLove.person = "Milena"
+	inviteMessage := inviteSendMessage(inviteLove)
+	fmt.Printf("Testing:\n%v\n", inviteMessage)
+
+	fmt.Println("=====================")
+	vitorMessage := messageToSend{}
+	vitorMessage.person = "Vitor"
+	vitorMessage.phone = 930410030
+
+	fmt.Println(vitorMessage.methodSendMessage("paper"))
+
+}
+
+// actually what matter is only the endpoint, so I am able to write a function here
+func nameAndAge(name string, age int) (string, int) {
+	return name, age
 }
